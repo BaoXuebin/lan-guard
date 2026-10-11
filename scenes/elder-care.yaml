@@ -1,0 +1,51 @@
+# 场景包：居家养老看护
+# 与婴儿场景共用同一引擎：跌倒立即告警、久卧翻身提醒（压疮预防）、离床/离开画面提醒
+name: 居家养老看护
+description: 跌倒立即告警、久卧翻身提醒（压疮预防）、离床与呼喊检测，适用于卧床或居家老人
+
+vision_prompt: |
+  你是一名居家养老看护助手。请仔细观察这张居家监控画面，严格按以下 JSON 格式输出（不要输出任何其他文字）：
+  {"state": "in_bed_lying", "face_covered": false, "awake": false, "in_frame": true, "description": "一句话描述"}
+  字段说明：
+  - state：人物当前状态，取值必须是以下之一
+    in_bed_lying=躺在床上, in_bed_sitting=在床上坐起, sitting=坐在椅子或轮椅上,
+    standing_walking=站立或走动, fallen=倒在地上疑似跌倒, away=不在画面, unknown=无法判断
+  - face_covered：口鼻是否被遮挡
+  - awake：是否清醒（睁眼、说话、大幅活动都算清醒；安睡为 false）
+  - in_frame：画面中是否能看到人
+  - description：不超过 30 字的中文描述
+
+state_labels:
+  in_bed_lying: 卧床
+  in_bed_sitting: 床上坐起
+  sitting: 坐位
+  standing_walking: 站立/行走
+  fallen: 跌倒
+  away: 不在画面
+  unknown: 未知
+
+rules:
+  # 久卧翻身提醒（压疮预防）
+  duration_alert:
+    states: [in_bed_lying, in_bed_sitting]
+    minutes: 120
+    cooldown_minutes: 60
+    template: "老人保持{label}已约 {minutes} 分钟，建议协助翻身或调整体位"
+
+  # 跌倒 → 立即告警
+  immediate_alert:
+    states: [fallen]
+    cooldown_seconds: 60
+    template: "疑似{label}！请立即查看！"
+
+  flag_alerts:
+    face_covered:
+      enabled: false
+
+  away:
+    grace_seconds: 60
+    template: "画面中长时间没有人，请关注情况"
+
+  audio_alert:
+    cooldown_seconds: 60
+    template: "检测到呼喊声，请留意！"

@@ -1,0 +1,58 @@
+# ============================================================
+# 宝宝睡眠监控 配置模板
+# 复制为 config.yaml 后修改；API Key 一律放 .env，不要写在这里
+# ============================================================
+
+# 场景包（相对项目根）：scenes/ 目录下的 YAML = 提示词 + 状态标签 + 告警规则
+# 也可在网页"设置"页切换；自定义场景照着 scenes/baby-sleep.yaml 写一个即可
+scene: scenes/baby-sleep.yaml
+
+server:
+  host: 0.0.0.0          # 局域网网页服务监听地址
+  port: 8080             # 网页端口，手机浏览器访问 http://<电脑IP>:8080
+  access_token: "change-me"   # 简单访问口令，网页首次打开时输入
+  https_port: 8443       # 推流端 HTTPS 端口（iPhone 浏览器推流必须 HTTPS）
+  ssl_certfile: "deploy/cert/server.crt"   # 由 tools/make_certs.sh 生成
+  ssl_keyfile: "deploy/cert/server.key"
+
+stream:
+  # MediaMTX 的 RTSP 地址（iPhone 经 RTMP 推流进来，服务端从 RTSP 取流分析）
+  rtsp_url: "rtsp://127.0.0.1:8554/baby"
+  sample_interval: 5         # 本地采样间隔（秒），用于运动检测
+  analyze_interval: 15       # 有动静时送视觉大模型分析的间隔（秒）
+  idle_analyze_interval: 60  # 画面静止时兜底分析间隔（秒），防止长时间漏检
+  motion_threshold: 8        # 运动分数阈值（0~100），低于此值视为静止
+
+vision:
+  # provider 可选：
+  #   zhipu        智谱 GLM（默认，glm-4.5v）
+  #   openai_compat  任何 OpenAI 兼容的视觉模型接口（Qwen-VL / GLM-4V-Flash / GPT-4o-mini 等）
+  #   mock         调试用，不调用云端，返回固定结果
+  #   disabled     关闭云端视觉分析（退化为纯视频监控 + 本地哭声检测）
+  provider: zhipu
+  model: glm-4.5v
+  base_url: https://open.bigmodel.cn/api/paas/v4
+  api_key: ""            # 也可在网页"设置"页填写并保存；留空则用 .env 中的 ZHIPU_API_KEY
+  api_key_env: ZHIPU_API_KEY
+  timeout_sec: 30
+
+audio:
+  enabled: true
+  sample_rate: 16000
+  cry_threshold_rms: 500     # 哭声响度阈值（16bit PCM 的 RMS，需按环境噪声微调）
+  min_sustain_sec: 1.5       # 持续超过该时长才算哭声（过滤碰撞等短噪声）
+  baseline_window_sec: 30    # 环境噪声基线的滑动窗口
+
+alerts:
+  # 注意：告警规则（阈值/文案/状态）现由场景包 scenes/*.yaml 定义，此处仅作
+  # 场景包缺省字段时的回退值，一般无需修改
+  side_sleep_minutes: 30
+  side_cooldown_minutes: 15
+  prone_alert: true
+  face_cover_alert: true
+  anomaly_cooldown_sec: 120
+  away_grace_sec: 20
+  cry_cooldown_sec: 60
+
+storage:
+  events_file: "data/events.jsonl"   # 事件日志（JSONL，已被 .gitignore 排除）

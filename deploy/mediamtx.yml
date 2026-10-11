@@ -1,0 +1,27 @@
+# MediaMTX 配置 —— 接收推流并分发给局域网浏览器
+# 用法: tools/bin/mediamtx/mediamtx.exe deploy/mediamtx.yml
+# 端口: RTSP 8554 / RTMP+WHIP 推流 / HLS 8888 / WebRTC 8889
+
+logLevel: info
+api: no
+
+rtsp: yes
+rtspAddress: :8554
+
+rtmp: yes
+rtmpAddress: :1935
+
+hls: yes
+hlsAddress: :8888
+hlsAllowOrigin: '*'
+
+# WebRTC 承担: 浏览器推流入口(WHIP) + 查看端低延迟播放(WHEP)
+# 只监听本机回环使用：浏览器端经由后端 /proxy/whip、/proxy/whep 同源代理访问，
+# 因此无需 TLS，手机也无需信任任何 8889 证书（iOS 摄像头所需的 HTTPS 由后端 8443 提供）
+webrtc: yes
+webrtcAddress: :8889
+webrtcAdditionalHosts: []  # 局域网使用一般无需填写；如有跨网卡问题可填电脑局域网 IP
+
+# 局域网内使用，不做认证；请勿将端口暴露到公网
+paths:
+  baby:

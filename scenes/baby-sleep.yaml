@@ -1,0 +1,56 @@
+# 场景包：婴儿睡眠监护（默认场景）
+# 场景 = 视觉提示词 + 状态定义 + 告警规则，引擎（推流/采样/分析/告警/网页）完全复用
+name: 婴儿睡眠监护
+description: 睡姿翻身提醒、蒙脸/趴睡告警、哭声检测，适用于婴儿床场景
+
+# 视觉分析提示词。模型须严格输出 JSON：state 必须是 state_labels 中的键
+vision_prompt: |
+  你是一名专业的婴儿睡眠看护助手。请仔细观察这张婴儿床监控画面，严格按以下 JSON 格式输出（不要输出任何其他文字）：
+  {"state": "supine", "face_covered": false, "awake": false, "in_frame": true, "description": "一句话描述"}
+  字段说明：
+  - state：婴儿当前状态，取值必须是 supine/left_side/right_side/prone/unknown 之一
+    supine=仰卧, left_side=婴儿自身左侧卧, right_side=婴儿自身右侧卧, prone=趴卧, unknown=无法判断
+  - face_covered：口鼻是否被被子/衣物/玩具等遮挡
+  - awake：是否醒着（睁眼、哭闹、大幅活动、坐起都算醒着）
+  - in_frame：画面中是否能看到婴儿
+  - description：不超过 30 字的中文描述
+
+# 状态 → 显示标签
+state_labels:
+  supine: 仰卧
+  left_side: 左侧卧
+  right_side: 右侧卧
+  prone: 趴卧
+  unknown: 未知
+
+# 告警规则（引擎按规则类型执行，与具体场景解耦）
+rules:
+  # 停留在某些状态过久 → 提醒（如换边/翻身）
+  duration_alert:
+    states: [left_side, right_side]
+    minutes: 30
+    cooldown_minutes: 15
+    template: "宝宝保持{label}已约 {minutes} 分钟，建议帮忙换个方向"
+
+  # 出现某些状态 → 立即告警（如趴睡/跌倒）
+  immediate_alert:
+    states: [prone]
+    cooldown_seconds: 120
+    template: "检测到宝宝趴睡（{label}）！请立即查看"
+
+  # 模型返回的布尔标志 → 告警
+  flag_alerts:
+    face_covered:
+      enabled: true
+      cooldown_seconds: 120
+      template: "宝宝口鼻可能被遮挡！请立即查看"
+
+  # 离开画面
+  away:
+    grace_seconds: 20
+    template: "画面中看不到宝宝了，请检查情况"
+
+  # 音频（本地哭声检测）
+  audio_alert:
+    cooldown_seconds: 60
+    template: "检测到宝宝哭声！"

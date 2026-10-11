@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>设置 · LAN Guard</title>
+<link rel="stylesheet" href="/static/style.css">
+<style>
+  .form-card { background: var(--card); border: 1px solid var(--line);
+    border-radius: 12px; padding: 16px; margin-top: 12px; }
+  .form-card h3 { font-size: 15px; margin-bottom: 12px; }
+  .row { display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--line); }
+  .row:last-child { border-bottom: none; }
+  .row label { font-size: 14px; }
+  .row .hint { display: block; font-size: 12px; color: var(--dim); margin-top: 2px; }
+  .row input[type=text], .row input[type=number], .row input[type=password], .row select {
+    background: var(--bg); color: var(--text); border: 1px solid var(--line);
+    border-radius: 8px; padding: 8px 10px; font-size: 14px; width: 46%;
+    max-width: 220px; text-align: right;
+  }
+  .row input[type=checkbox] { width: 20px; height: 20px; }
+  #save-btn {
+    width: 100%; margin-top: 16px; padding: 14px; font-size: 16px;
+    border: none; border-radius: 12px; background: var(--blue); color: #fff; cursor: pointer;
+  }
+  #toast {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    background: var(--green); color: #fff; padding: 12px 22px; border-radius: 24px;
+    font-size: 14px; display: none; z-index: 200;
+  }
+  .restart-tip { color: var(--orange); font-size: 12px; margin-top: 8px; display: none; }
+  a.back { color: var(--blue); font-size: 14px; text-decoration: none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>⚙️ 设置</h1>
+  <a class="back" href="/">← 返回监控</a>
+</header>
+
+<main>
+  <div class="form-card">
+    <h3>🎯 监控场景</h3>
+    <div class="row">
+      <label>当前场景<span class="hint">切换后提示词与告警规则立即生效（持久化）</span></label>
+      <select id="scene"></select>
+    </div>
+    <div class="row">
+      <label id="scene-desc" style="font-size:12px;color:var(--dim);"></label>
+    </div>
+    <div class="row">
+      <label>自定义场景<span class="hint">在项目 scenes/ 目录新建 YAML 即可出现在此（提示词+状态+规则）</span></label>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <h3>🔐 访问安全</h3>
+    <div class="row">
+      <label>访问口令<span class="hint">监控页首次打开时要求输入</span></label>
+      <input type="text" id="server.access_token">
+    </div>
+  </div>
+
+  <div class="form-card">
+    <h3>🧠 视觉分析（大模型）</h3>
+    <div class="row">
+      <label>Provider<span class="hint">zhipu=智谱 / openai_compat=OpenAI 兼容 /
+        mock=调试 / disabled=关闭云端</span></label>
+      <select id="vision.provider">
+        <option value="zhipu">zhipu</option>
+        <option value="openai_compat">openai_compat</option>
+        <option value="mock">mock</option>
+        <option value="disabled">disabled</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>模型名<span class="hint">智谱: glm-4.5v 等</span></label>
+      <input type="text" id="vision.model">
+    </div>
+    <div class="row">
+      <label>接口地址<span class="hint">OpenAI 兼容 base_url</span></label>
+      <input type="text" id="vision.base_url">
+    </div>
+    <div class="row">
+      <label>API Key<span class="hint">保存在电脑本机 config.yaml，不会上传</span></label>
+      <input type="password" id="vision.api_key" placeholder="">
+    </div>
+    <div class="row">
+      <label>夜间弱光自动增亮<span class="hint">画面太暗时先增亮再送大模型分析</span></label>
+      <input type="checkbox" id="vision.dark_enhance">
+    </div>
+    <div class="row">
+      <label>暗光判定阈值<span class="hint">画面平均亮度(0~255)低于该值触发增亮</span></label>
+      <input type="number" id="vision.dark_threshold">
+    </div>
+  </div>
+
+  <div class="form-card">
+    <h3>⏱️ 采样与分析频率</h3>
+    <div class="row">
+      <label>采样间隔（秒）<span class="hint">本地抽帧做运动检测</span></label>
+      <input type="number" id="stream.sample_interval">
+    </div>
+    <div class="row">
+      <label>分析间隔（秒）<span class="hint">有动静时送大模型的频率</span></label>
+      <input type="number" id="stream.analyze_interval">
+    </div>
+    <div class="row">
+      <label>静默兜底分析（秒）<span class="hint">画面静止时的兜底频率</span></label>
+      <input type="number" id="stream.idle_analyze_interval">
+    </div>
+    <div class="row">
+      <label>运动阈值<span class="hint">0~100，越小越灵敏</span></label>
+      <input type="number" id="stream.motion_threshold">
+    </div>
+  </div>
+
+  <div class="form-card">
+    <h3>🔊 哭声检测（本地，不经云端）</h3>
+    <div class="row">
+      <label>启用哭声检测</label>
+      <input type="checkbox" id="audio.enabled">
+    </div>
+    <div class="row">
+      <label>响度阈值 RMS<span class="hint">环境嘈杂就调大，宝宝哭声触发不了就调小</span></label>
+      <input type="number" id="audio.cry_threshold_rms">
+    </div>
+    <div class="row">
+      <label>最短持续（秒）<span class="hint">短于该时长的响声不告警</span></label>
+      <input type="number" id="audio.min_sustain_sec">
+    </div>
+  </div>
+
+  <div class="restart-tip" id="restart-tip">
+    ⚠️ 视频源地址已修改，需重启服务后生效（stop-windows.bat → start-windows.bat）
+  </div>
+  <button id="save-btn">保存（立即生效并持久化）</button>
+</main>
+
+<div id="toast"></div>
+<script src="/static/settings.js"></script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>LAN Guard · AI 看护</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <h1>🛡️ LAN Guard <span style="font-size:13px;color:var(--dim);" id="scene-title"></span></h1>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <a href="/sources" style="color:var(--blue);font-size:14px;text-decoration:none;">➕ 注册推送源</a>
+    <a href="/settings" style="color:var(--blue);font-size:14px;text-decoration:none;">⚙️ 设置</a>
+    <span id="conn-dot" class="dot offline" title="服务连接状态"></span>
+  </div>
+</header>
+
+<main>
+  <section class="video-box">
+    <video id="video" autoplay playsinline muted></video>
+    <div id="video-status" class="video-status">正在连接视频流…</div>
+  </section>
+
+  <section class="status-grid">
+    <div class="card big">
+    <div class="label">当前状态</div>
+    <div class="value" id="st-posture">--</div>
+    <div class="sub" id="st-posture-dur">持续 --</div>
+    </div>
+    <div class="card">
+      <div class="label">觉醒状态</div>
+      <div class="value" id="st-awake">--</div>
+      <div class="sub" id="st-cry"></div>
+    </div>
+    <div class="card" id="card-risk">
+      <div class="label">风险提示</div>
+      <div class="value" id="st-risk">正常</div>
+      <div class="sub" id="st-inframe"></div>
+    </div>
+    <div class="card small">
+      <div class="label">最近画面描述</div>
+      <div class="sub" id="st-desc">等待分析…</div>
+      <div class="sub dim" id="st-last-analysis"></div>
+    </div>
+  </section>
+
+  <section class="events">
+    <h2>事件记录</h2>
+    <ul id="event-list"></ul>
+  </section>
+</main>
+
+<!-- 告警弹层 -->
+<div id="alert-overlay" class="hidden">
+  <div class="alert-box">
+    <div class="alert-icon">⚠️</div>
+    <div id="alert-message">检测到异常</div>
+    <button id="alert-ack">我知道了</button>
+  </div>
+</div>
+
+<!-- 口令输入 -->
+<div id="token-overlay" class="hidden">
+  <div class="alert-box">
+    <div class="alert-icon">🔐</div>
+    <p>请输入访问口令</p>
+    <input type="password" id="token-input" autocomplete="off">
+    <button id="token-ok">进入</button>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

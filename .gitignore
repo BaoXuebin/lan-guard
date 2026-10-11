@@ -1,0 +1,36 @@
+# 密钥与本地配置（严禁提交）
+.env
+config.yaml
+deploy/mediamtx.local.yml
+# 自签证书与 CA 私钥（tools/make_certs.sh 生成，绝不能提交）
+deploy/cert/
+
+# 运行时数据
+data/
+*.jsonl
+*.jpg
+*.jpeg
+
+# 下载的二进制（用户自行下载或用 tools/download_bins 脚本）
+tools/bin/
+tools/*.zip
+tools/*.tar.gz
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# 运行日志
+tools/*.log
+
+# 配置备份（可能含密钥）
+*.yaml.bak
+config.yaml.bak
